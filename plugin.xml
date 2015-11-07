@@ -75,9 +75,9 @@
         </config-file>
 
         <podfile>
-            <pod name="FBSDKCoreKit" />
-            <pod name="FBSDKLoginKit" />
-            <pod name="FBSDKShareKit" />
+            <pod name="FBSDKCoreKit" version="~> 4.7.0" />
+            <pod name="FBSDKLoginKit" version="~> 4.7.0" />
+            <pod name="FBSDKShareKit" version="~> 4.7.0" />
         </podfile>
 
         <source-file src="platforms/ios/src/FBConnect.swift"/>
