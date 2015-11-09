@@ -8,7 +8,7 @@ class FBConnect: CDVPlugin {
     
     func finishLaunching(notification: NSNotification) {
         FBSDKApplicationDelegate.sharedInstance().application(UIApplication.sharedApplication(), didFinishLaunchingWithOptions: notification.userInfo)
-        FBSDKLoginManager.renewSystemCredentials { (result: ACAccountCredentialRenewResult!, error: NSError!) -> Void in
+        FBSDKLoginManager.renewSystemCredentials { (result: ACAccountCredentialRenewResult, error: NSError!) -> Void in
             CLSLogv("renewSystemCredentials: %@", getVaList([String(result)]))
         }
     }
