@@ -19,10 +19,10 @@ public class FBConnect: CordovaPlugin() {
         }
     }
 
-    public fun log(args: JSONArray): (() -> Unit) {
+    public fun login(args: JSONArray): (() -> Unit) {
         val msg = args.getString(0)
         return {
-            log(msg)
+            println(msg)
         }
     }
 }
