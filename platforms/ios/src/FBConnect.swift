@@ -3,7 +3,7 @@ import Foundation
 @objc(FBConnect)
 class FBConnect: CDVPlugin {
     override func pluginInitialize() {
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: "finishLaunching", name: UIApplicationDidFinishLaunchingNotification, object: nil);
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: "finishLaunching:", name: UIApplicationDidFinishLaunchingNotification, object: nil);
     }
     
     func finishLaunching(notification: NSNotification) {
