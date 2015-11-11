@@ -10,7 +10,7 @@ var names = [
 var obj = {};
 
 names.forEach(function(methodName) {
-    obj[name] = function() {
+    obj[methodName] = function() {
         callback = arguments[0]
         args = Array.prototype.slice.call(arguments, 1)
         console.log("Calling " + pluginName + "." + methodName + ": " + args);
