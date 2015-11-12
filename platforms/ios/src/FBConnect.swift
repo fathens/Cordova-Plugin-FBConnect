@@ -8,9 +8,6 @@ class FBConnect: CDVPlugin {
     
     func finishLaunching(notification: NSNotification) {
         FBSDKApplicationDelegate.sharedInstance().application(UIApplication.sharedApplication(), didFinishLaunchingWithOptions: notification.userInfo)
-        FBSDKLoginManager.renewSystemCredentials { (result: ACAccountCredentialRenewResult, error: NSError!) -> Void in
-            CLSLogv("renewSystemCredentials: %@", getVaList([String(result)]))
-        }
     }
     
     override func handleOpenURL(notification: NSNotification) {
@@ -52,5 +49,11 @@ class FBConnect: CDVPlugin {
     
     func getName(command: CDVInvokedUrlCommand) {
         withReadPermission(command) { FBSDKProfile.currentProfile().name }
+    }
+    
+    func renewSystemCredentials(command: CDVInvokedUrlCommand) {
+        FBSDKLoginManager.renewSystemCredentials { (result: ACAccountCredentialRenewResult, error: NSError!) -> Void in
+            CLSLogv("renewSystemCredentials: %@", getVaList([String(result)]))
+        }
     }
 }
