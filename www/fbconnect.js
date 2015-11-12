@@ -10,7 +10,6 @@ names.forEach(function(methodName) {
 	obj[methodName] = function() {
 		callback = arguments[0]
 		args = Array.prototype.slice.call(arguments, 1);
-		console.log("Calling " + pluginName + "." + methodName + ": " + args);
 
 		cordova(function(result) {
 			callback(null, result);
