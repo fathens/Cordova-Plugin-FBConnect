@@ -51,7 +51,7 @@
 
         <config-file target="config.xml" parent="/*">
             <feature name="FBConnectPlugin">
-                <param name="ios-package" value="FabricCrashlytics"/>
+                <param name="ios-package" value="FBConnect"/>
                 <param name="onload" value="true" />
             </feature>
         </config-file>
