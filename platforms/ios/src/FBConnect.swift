@@ -36,7 +36,6 @@ class FBConnect: CDVPlugin {
                 } else if result.isCancelled {
                     self.finish_error(command, msg: "Cancelled")
                 } else {
-                    CLSLogv("AccessToken: %@", getVaList([result.token.tokenString]))
                     next()
                 }
             }
@@ -52,8 +51,12 @@ class FBConnect: CDVPlugin {
     }
     
     func renewSystemCredentials(command: CDVInvokedUrlCommand) {
-        FBSDKLoginManager.renewSystemCredentials { (result: ACAccountCredentialRenewResult, error: NSError!) -> Void in
-            CLSLogv("renewSystemCredentials: %@", getVaList([String(result)]))
+        FBSDKLoginManager.renewSystemCredentials { (result: ACAccountCredentialRenewResult, err: NSError!) -> Void in
+            if err != nil {
+                self.finish_ok(command, msg: String(result))
+            } else {
+                self.finish_error(command, msg: String(err))
+            }
         }
     }
 }
