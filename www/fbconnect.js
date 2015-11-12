@@ -8,7 +8,7 @@ var obj = {};
 
 names.forEach(function(methodName) {
 	obj[methodName] = function() {
-		callback = arguments[0]
+		callback = arguments[0];
 		args = Array.prototype.slice.call(arguments, 1);
 
 		cordova(function(result) {
