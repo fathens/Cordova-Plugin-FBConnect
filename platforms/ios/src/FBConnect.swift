@@ -58,7 +58,14 @@ class FBConnect: CDVPlugin {
         CLSLogv("Entering renewSystemCredentials: %@", getVaList([String(command)]))
         FBSDKLoginManager.renewSystemCredentials { (result: ACAccountCredentialRenewResult, err: NSError!) -> Void in
             if err != nil {
-                self.finish_ok(command, msg: String(result))
+                func readMsg() -> String {
+                    switch result {
+                    case .Failed: return "Failed"
+                    case .Rejected: return "Rejected"
+                    case .Renewed: return "Renewed"
+                    }
+                }
+                self.finish_ok(command, msg: String(readMsg()))
             } else {
                 self.finish_error(command, msg: String(err))
             }
