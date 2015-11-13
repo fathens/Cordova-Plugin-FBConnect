@@ -64,6 +64,12 @@
             <string>$APP_NAME</string>
         </config-file>
 
+        <config-file target="*-Info.plist" parent="LSApplicationQueriesSchemes">
+            <array>
+                <string>fbauth2</string>
+            </array>
+        </config-file>
+
         <config-file target="*-Info.plist" parent="CFBundleURLTypes">
             <array>
                 <dict>
