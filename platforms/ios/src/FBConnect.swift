@@ -7,6 +7,7 @@ class FBConnect: CDVPlugin {
     }
     
     func finishLaunching(notification: NSNotification) {
+        CLSLogv("Initializing FBSDKApplicationDelegate: %@ (%@)", getVaList([String(notification), String(notification.userInfo)]))
         FBSDKApplicationDelegate.sharedInstance().application(UIApplication.sharedApplication(), didFinishLaunchingWithOptions: notification.userInfo)
     }
     
