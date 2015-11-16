@@ -33,7 +33,7 @@ class FBConnect: CDVPlugin {
         } else {
             let READ_PERMISSIONS = ["public_profile"]
             CLSLogv("Taking FBPermissions: %@", getVaList([String(READ_PERMISSIONS)]))
-            FBSDKLoginManager.init().logInWithReadPermissions(READ_PERMISSIONS, fromViewController: nil) { (result: FBSDKLoginManagerLoginResult!, err: NSError!) -> Void in
+            FBSDKLoginManager.init().logInWithReadPermissions(READ_PERMISSIONS, fromViewController: nil, handler: { (result: FBSDKLoginManagerLoginResult!, err: NSError!) -> Void in
                 if err != nil {
                     self.finish_error(command, msg: String(err))
                 } else if result.isCancelled {
@@ -41,7 +41,7 @@ class FBConnect: CDVPlugin {
                 } else {
                     next()
                 }
-            }
+            })
         }
     }
     
