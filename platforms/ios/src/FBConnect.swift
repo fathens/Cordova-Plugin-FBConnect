@@ -7,8 +7,9 @@ class FBConnect: CDVPlugin {
     }
     
     func finishLaunching(notification: NSNotification) {
-        CLSLogv("Initializing FBSDKApplicationDelegate: %@ (%@)", getVaList([String(notification), String(notification.userInfo)]))
-        FBSDKApplicationDelegate.sharedInstance().application(UIApplication.sharedApplication(), didFinishLaunchingWithOptions: notification.userInfo)
+        let app = UIApplication.sharedApplication()
+        CLSLogv("Initializing FBSDKApplicationDelegate:[%@] %@ (%@)", getVaList([String(app), String(notification), String(notification.userInfo)]))
+        FBSDKApplicationDelegate.sharedInstance().application(app, didFinishLaunchingWithOptions: notification.userInfo)
     }
     
     override func handleOpenURL(notification: NSNotification) {
