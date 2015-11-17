@@ -3,13 +3,14 @@ import Foundation
 @objc(FBConnect)
 class FBConnect: CDVPlugin {
     override func pluginInitialize() {
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: "finishLaunching:", name: UIApplicationDidFinishLaunchingNotification, object: nil);
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: "finishLaunching:", name: UIApplicationDidFinishLaunchingNotification, object: nil)
     }
     
     func finishLaunching(notification: NSNotification) {
         let app = UIApplication.sharedApplication()
-        CLSLogv("Initializing FBSDKApplicationDelegate:[%@] %@ (%@)", getVaList([String(app), String(notification), String(notification.userInfo)]))
-        FBSDKApplicationDelegate.sharedInstance().application(app, didFinishLaunchingWithOptions: notification.userInfo)
+        let options = notification.userInfo != nil ? notification.userInfo : [:]
+        CLSLogv("Initializing FBSDKApplicationDelegate:[%@] %@ (%@)", getVaList([String(app), String(notification), String(options)]))
+        FBSDKApplicationDelegate.sharedInstance().application(app, didFinishLaunchingWithOptions: options)
     }
     
     override func handleOpenURL(notification: NSNotification) {
