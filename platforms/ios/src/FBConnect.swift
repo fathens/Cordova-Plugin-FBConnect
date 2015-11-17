@@ -40,9 +40,12 @@ class FBConnect: CDVPlugin {
         if FBSDKAccessToken.currentAccessToken() != nil {
             next()
         } else {
+            let loginManager = FBSDKLoginManager.init()
+            CLSLogv("Login behavior (before): %@", getVaList([String(loginManager.loginBehavior)]))
             let READ_PERMISSIONS = ["public_profile"]
             CLSLogv("Taking FBPermissions: %@", getVaList([String(READ_PERMISSIONS)]))
-            FBSDKLoginManager.init().logInWithReadPermissions(READ_PERMISSIONS, fromViewController: self.viewController, handler: { (result: FBSDKLoginManagerLoginResult!, err: NSError!) -> Void in
+            loginManager.logInWithReadPermissions(READ_PERMISSIONS, fromViewController: self.viewController, handler: { (result: FBSDKLoginManagerLoginResult!, err: NSError!) -> Void in
+                CLSLogv("Login behavior (after): %@", getVaList([String(loginManager.loginBehavior)]))
                 if err != nil {
                     self.finish_error(command, msg: String(err))
                 } else if result.isCancelled {
