@@ -4,6 +4,7 @@ import Foundation
 class FBConnect: CDVPlugin {
     override func pluginInitialize() {
         NSNotificationCenter.defaultCenter().addObserver(self, selector: "finishLaunching:", name: UIApplicationDidFinishLaunchingNotification, object: nil)
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: "becomeActive:", name: UIApplicationDidBecomeActiveNotification, object: nil)
     }
     
     func finishLaunching(notification: NSNotification) {
@@ -11,6 +12,10 @@ class FBConnect: CDVPlugin {
         let options = notification.userInfo != nil ? notification.userInfo : [:]
         CLSLogv("Initializing FBSDKApplicationDelegate:[%@] %@ (%@)", getVaList([String(app), String(notification), String(options)]))
         FBSDKApplicationDelegate.sharedInstance().application(app, didFinishLaunchingWithOptions: options)
+    }
+    
+    func becomeActive(notification: NSNotification) {
+        FBSDKAppEvents.activateApp()
     }
     
     override func handleOpenURL(notification: NSNotification) {
