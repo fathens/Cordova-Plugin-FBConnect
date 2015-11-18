@@ -16,16 +16,16 @@
     <preference name="APP_ID" />
     <preference name="APP_NAME" />
 
-    <config-file target="config.xml" parent="/*">
-        <access origin="https://m.facebook.com" />
-        <access origin="https://graph.facebook.com" />
-        <access origin="https://api.facebook.com" />
-        <access origin="https://*.fbcdn.net" />
-        <access origin="https://*.akamaihd.net" />
-    </config-file>
-
     <platform name="android">
         <dependency id="org.fathens.cordova.plugin.lang.Kotlin" url="https://github.com/fathens/Cordova-Plugin-Kotlin.git" commit="master" />
+
+        <config-file target="config.xml" parent="/*">
+            <access origin="https://m.facebook.com" />
+            <access origin="https://graph.facebook.com" />
+            <access origin="https://api.facebook.com" />
+            <access origin="https://*.fbcdn.net" />
+            <access origin="https://*.akamaihd.net" />
+        </config-file>
 
         <config-file target="res/xml/config.xml" parent="/*">
             <feature name="FBConnectPlugin">
