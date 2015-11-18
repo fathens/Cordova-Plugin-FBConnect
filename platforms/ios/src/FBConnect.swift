@@ -18,7 +18,7 @@ class FBConnect: CDVPlugin {
                 perms.append("public_profile")
             }
             self.accessToken.getCurrent({ self.permRead(command, permissions: perms) }) {
-                self.finish_ok(command, msg: $0.tokenString)
+                self.finish_ok(command, result: $0.tokenString)
             }
         }
     }
@@ -33,7 +33,7 @@ class FBConnect: CDVPlugin {
     func getName(command: CDVInvokedUrlCommand) {
         fork {
             self.profile.getCurrent({ self.permRead(command, permissions: ["public_profile"]) }) {
-                self.finish_ok(command, msg: $0.name)
+                self.finish_ok(command, result: $0.name)
             }
         }
     }
@@ -49,7 +49,7 @@ class FBConnect: CDVPlugin {
                     reads.append(perm)
                 }
             }
-            func finish() { self.finish_ok(command, msg: "") }
+            func finish() { self.finish_ok(command) }
             
             if reads.isEmpty {
                 self.permPublish(command, permissions: pubs) {
@@ -69,16 +69,13 @@ class FBConnect: CDVPlugin {
         }
     }
     
-    func getStatus(command: CDVInvokedUrlCommand) {
+    func getCurrentPermissions(command: CDVInvokedUrlCommand) {
         fork {
-            var result: [String: AnyObject] = [:]
+            var result: [String]? = nil
             if let ac = FBSDKAccessToken.currentAccessToken() {
-                result["status"] = "connected"
-                result["permissions"] = ac.permissions
-            } else {
-                result["status"] = "disconnected"
+                result = ac.permissions.map { String($0) }
             }
-            self.finish_ok(command, msg: result)
+            self.finish_ok(command, result: result)
         }
     }
     
@@ -127,22 +124,20 @@ class FBConnect: CDVPlugin {
         dispatch_async(dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), proc)
     }
     
-    private func mkErrorOrNothing(command: CDVInvokedUrlCommand) -> String? -> Void {
-        return { (err: String?)  in
-            if let e = err {
-                self.finish_error(command, msg: e)
-            }
-        }
-    }
-    
     private func finish_error(command: CDVInvokedUrlCommand, msg: String!) {
         commandDelegate!.sendPluginResult(CDVPluginResult(status: CDVCommandStatus_ERROR, messageAsString: msg), callbackId: command.callbackId)
     }
-    private func finish_ok(command: CDVInvokedUrlCommand, msg: AnyObject!) {
-        if msg is String {
-            commandDelegate!.sendPluginResult(CDVPluginResult(status: CDVCommandStatus_OK, messageAsString: msg as! String), callbackId: command.callbackId)
-        } else if msg is [String: AnyObject] {
-            commandDelegate!.sendPluginResult(CDVPluginResult(status: CDVCommandStatus_OK, messageAsDictionary: msg as! [String: AnyObject]), callbackId: command.callbackId)
+    
+    private func finish_ok(command: CDVInvokedUrlCommand, result: AnyObject? = nil) {
+        log("Command Result: \(result)")
+        if let msg = result as? String {
+            commandDelegate!.sendPluginResult(CDVPluginResult(status: CDVCommandStatus_OK, messageAsString: msg), callbackId: command.callbackId)
+        } else if let array = result as? [String] {
+            commandDelegate!.sendPluginResult(CDVPluginResult(status: CDVCommandStatus_OK, messageAsArray: array), callbackId: command.callbackId)
+        } else if let dict = result as? [String: AnyObject] {
+            commandDelegate!.sendPluginResult(CDVPluginResult(status: CDVCommandStatus_OK, messageAsDictionary: dict), callbackId: command.callbackId)
+        } else if result == nil {
+            commandDelegate!.sendPluginResult(CDVPluginResult(status: CDVCommandStatus_OK), callbackId: command.callbackId)
         }
     }
     
