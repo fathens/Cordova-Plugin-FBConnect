@@ -9,17 +9,76 @@ private func log(msg: String) {
 
 @objc(FBConnect)
 class FBConnect: CDVPlugin {
-    // MARK: - Plugin Interface
+    // MARK: - Plugin Commands
     
     func login(command: CDVInvokedUrlCommand) {
-        accessToken.getCurrent({ self.obtainReadPermission(command) }) {
-            self.finish_ok(command, msg: $0.tokenString)
+        fork {
+            var perms = command.arguments.map { $0 as! String }
+            if perms.count < 1 {
+                perms.append("public_profile")
+            }
+            self.accessToken.getCurrent({ self.permRead(command, permissions: perms) }) {
+                self.finish_ok(command, msg: $0.tokenString)
+            }
+        }
+    }
+    
+    func logout(command: CDVInvokedUrlCommand) {
+        fork {
+            log("Logout now!")
+            FBSDKLoginManager.init().logOut()
         }
     }
     
     func getName(command: CDVInvokedUrlCommand) {
-        profile.getCurrent({ self.obtainReadPermission(command) }) {
-            self.finish_ok(command, msg: $0.name)
+        fork {
+            self.profile.getCurrent({ self.permRead(command, permissions: ["public_profile"]) }) {
+                self.finish_ok(command, msg: $0.name)
+            }
+        }
+    }
+    
+    func gainPermission(command: CDVInvokedUrlCommand) {
+        fork {
+            var reads: [String] = []
+            var pubs: [String] = []
+            command.arguments.map { $0 as! String }.forEach { perm in
+                if self.isPublishPermission(perm) {
+                    pubs.append(perm)
+                } else {
+                    reads.append(perm)
+                }
+            }
+            func finish() { self.finish_ok(command, msg: "") }
+            
+            if reads.isEmpty {
+                self.permPublish(command, permissions: pubs) {
+                    finish()
+                }
+            } else {
+                self.permRead(command, permissions: reads) {
+                    if pubs.isEmpty {
+                        finish()
+                    } else {
+                        self.permPublish(command, permissions: pubs) {
+                            finish()
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    func getStatus(command: CDVInvokedUrlCommand) {
+        fork {
+            var result: [String: AnyObject] = [:]
+            if let ac = FBSDKAccessToken.currentAccessToken() {
+                result["status"] = "connected"
+                result["permissions"] = ac.permissions
+            } else {
+                result["status"] = "disconnected"
+            }
+            self.finish_ok(command, msg: result)
         }
     }
     
@@ -64,11 +123,27 @@ class FBConnect: CDVPlugin {
     
     // MARK: - Private Utillities
     
+    private func fork(proc: () -> Void) {
+        dispatch_async(dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), proc)
+    }
+    
+    private func mkErrorOrNothing(command: CDVInvokedUrlCommand) -> String? -> Void {
+        return { (err: String?)  in
+            if let e = err {
+                self.finish_error(command, msg: e)
+            }
+        }
+    }
+    
     private func finish_error(command: CDVInvokedUrlCommand, msg: String!) {
         commandDelegate!.sendPluginResult(CDVPluginResult(status: CDVCommandStatus_ERROR, messageAsString: msg), callbackId: command.callbackId)
     }
-    private func finish_ok(command: CDVInvokedUrlCommand, msg: String!) {
-        commandDelegate!.sendPluginResult(CDVPluginResult(status: CDVCommandStatus_OK, messageAsString: msg), callbackId: command.callbackId)
+    private func finish_ok(command: CDVInvokedUrlCommand, msg: AnyObject!) {
+        if msg is String {
+            commandDelegate!.sendPluginResult(CDVPluginResult(status: CDVCommandStatus_OK, messageAsString: msg as! String), callbackId: command.callbackId)
+        } else if msg is [String: AnyObject] {
+            commandDelegate!.sendPluginResult(CDVPluginResult(status: CDVCommandStatus_OK, messageAsDictionary: msg as! [String: AnyObject]), callbackId: command.callbackId)
+        }
     }
     
     private func renewCredentials() {
@@ -88,16 +163,38 @@ class FBConnect: CDVPlugin {
         }
     }
     
-    private func obtainReadPermission(command: CDVInvokedUrlCommand) {
-        let READ_PERMISSIONS = ["public_profile"]
-        FBSDKLoginManager.init().logInWithReadPermissions(READ_PERMISSIONS, handler: { (result: FBSDKLoginManagerLoginResult!, err: NSError!) -> Void in
+    private func permRead(command: CDVInvokedUrlCommand, permissions: [String], finish: (() -> Void)? = nil) {
+        FBSDKLoginManager.init().logInWithReadPermissions(permissions) { (result: FBSDKLoginManagerLoginResult!, err: NSError!) -> Void in
             log("Result of logInWithReadPermissions: \(result), Error: \(err)")
             if err != nil {
                 self.finish_error(command, msg: String(err))
             } else if result.isCancelled {
                 self.finish_error(command, msg: "Cancelled")
+            } else {
+                if let fin = finish {
+                    fin()
+                }
             }
-        })
+        }
+    }
+    
+    private func permPublish(command: CDVInvokedUrlCommand, permissions: [String], finish: (() -> Void)? = nil) {
+        FBSDKLoginManager.init().logInWithPublishPermissions(permissions)  { (result: FBSDKLoginManagerLoginResult!, err: NSError!) -> Void in
+            log("Result of logInWithPublishPermissions: \(result), Error: \(err)")
+            if err != nil {
+                self.finish_error(command, msg: String(err))
+            } else if result.isCancelled {
+                self.finish_error(command, msg: "Cancelled")
+            } else {
+                if let fin = finish {
+                    fin()
+                }
+            }
+        }
+    }
+    
+    private func isPublishPermission(perm: String) -> Bool {
+        return perm.hasPrefix("publish") || perm.hasPrefix("manage") || perm == "ads_management" || perm == "create_event" || perm == "rsvp_event"
     }
     
     private let profile = ChangeKeeper<FBSDKProfile>()
