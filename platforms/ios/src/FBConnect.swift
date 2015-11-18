@@ -2,6 +2,10 @@ import Foundation
 
 @objc(FBConnect)
 class FBConnect: CDVPlugin {
+    private func log(msg: String) {
+        print(msg)
+    }
+    
     override func pluginInitialize() {
         NSNotificationCenter.defaultCenter().addObserver(self, selector: "finishLaunching:", name: UIApplicationDidFinishLaunchingNotification, object: nil)
         NSNotificationCenter.defaultCenter().addObserver(self, selector: "becomeActive:", name: UIApplicationDidBecomeActiveNotification, object: nil)
@@ -11,7 +15,7 @@ class FBConnect: CDVPlugin {
         let app = UIApplication.sharedApplication()
         let options = notification.userInfo != nil ? notification.userInfo : [:]
         
-        CLSLogv("Initializing FBSDKApplicationDelegate:[%@] %@ (%@)", getVaList([String(app), String(notification), String(options!)]))
+        log("Initializing FBSDKApplicationDelegate:\(app) \(options)")
         FBSDKApplicationDelegate.sharedInstance().application(app, didFinishLaunchingWithOptions: options)
     }
     
@@ -31,9 +35,9 @@ class FBConnect: CDVPlugin {
     }
     
     private func withReadPermission(command: CDVInvokedUrlCommand, proc: () -> String) {
-        CLSLogv("Entering withReadPermission: %@", getVaList([String(proc)]))
+        log("Entering withReadPermission: \(proc)")
         func next() {
-            CLSLogv("Calling: %@", getVaList([String(proc)]))
+            log("Calling: \(proc)")
             self.finish_ok(command, msg: proc())
         }
         
@@ -49,12 +53,12 @@ class FBConnect: CDVPlugin {
                 case .Web: return "Web"
                 }
             }
-
-            CLSLogv("Login behavior (before): %@", getVaList([behavior()]))
+            
+            log("Login behavior (before): \(behavior())")
             let READ_PERMISSIONS = ["public_profile"]
-            CLSLogv("Taking FBPermissions: %@", getVaList([String(READ_PERMISSIONS)]))
+            log("Taking FBPermissions: \(READ_PERMISSIONS)")
             loginManager.logInWithReadPermissions(READ_PERMISSIONS, fromViewController: self.viewController, handler: { (result: FBSDKLoginManagerLoginResult!, err: NSError!) -> Void in
-                CLSLogv("Login behavior (after): %@", getVaList([behavior()]))
+                self.log("Login behavior (after): \(behavior())")
                 if err != nil {
                     self.finish_error(command, msg: String(err))
                 } else if result.isCancelled {
@@ -71,12 +75,12 @@ class FBConnect: CDVPlugin {
     }
     
     func getName(command: CDVInvokedUrlCommand) {
-        CLSLogv("Entering getName: %@", getVaList([String(command)]))
+        log("Entering getName: \(command)")
         withReadPermission(command) { FBSDKProfile.currentProfile().name }
     }
     
     func renewSystemCredentials(command: CDVInvokedUrlCommand) {
-        CLSLogv("Entering renewSystemCredentials: %@", getVaList([String(command)]))
+        log("Entering renewSystemCredentials: \(command)")
         FBSDKLoginManager.renewSystemCredentials { (result: ACAccountCredentialRenewResult, err: NSError!) -> Void in
             if err != nil {
                 func readMsg() -> String {
