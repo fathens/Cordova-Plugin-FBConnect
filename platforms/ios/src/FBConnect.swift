@@ -15,11 +15,23 @@ class FBConnect: CDVPlugin {
     }
     
     func finishLaunching(notification: NSNotification) {
-        let app = UIApplication.sharedApplication()
         let options = notification.userInfo != nil ? notification.userInfo : [:]
+        FBSDKApplicationDelegate.sharedInstance().application(UIApplication.sharedApplication(), didFinishLaunchingWithOptions: options)
         
-        log("Initializing FBSDKApplicationDelegate:\(app) \(options)")
-        FBSDKApplicationDelegate.sharedInstance().application(app, didFinishLaunchingWithOptions: options)
+        FBSDKLoginManager.renewSystemCredentials { (result: ACAccountCredentialRenewResult, err: NSError!) -> Void in
+            if err != nil {
+                func readMsg() -> String {
+                    switch result {
+                    case .Failed: return "Failed"
+                    case .Rejected: return "Rejected"
+                    case .Renewed: return "Renewed"
+                    }
+                }
+                self.log("Result of renewSystemCredentials \(readMsg())")
+            } else {
+                self.log("Error on renewSystemCredentials \(err)")
+            }
+        }
     }
     
     func becomeActive(notification: NSNotification) {
@@ -78,25 +90,6 @@ class FBConnect: CDVPlugin {
     }
     
     func getName(command: CDVInvokedUrlCommand) {
-        log("Entering getName: \(command)")
         withReadPermission(command) { FBSDKProfile.currentProfile().name }
-    }
-    
-    func renewSystemCredentials(command: CDVInvokedUrlCommand) {
-        log("Entering renewSystemCredentials: \(command)")
-        FBSDKLoginManager.renewSystemCredentials { (result: ACAccountCredentialRenewResult, err: NSError!) -> Void in
-            if err != nil {
-                func readMsg() -> String {
-                    switch result {
-                    case .Failed: return "Failed"
-                    case .Rejected: return "Rejected"
-                    case .Renewed: return "Renewed"
-                    }
-                }
-                self.finish_ok(command, msg: String(readMsg()))
-            } else {
-                self.finish_error(command, msg: String(err))
-            }
-        }
     }
 }
