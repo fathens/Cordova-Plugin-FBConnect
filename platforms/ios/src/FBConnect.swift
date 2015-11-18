@@ -74,7 +74,7 @@ class FBConnect: CDVPlugin {
             log("Login behavior (before): \(behavior())")
             let READ_PERMISSIONS = ["public_profile"]
             log("Taking FBPermissions: \(READ_PERMISSIONS)")
-            loginManager.logInWithReadPermissions(READ_PERMISSIONS, fromViewController: self.viewController, handler: { (result: FBSDKLoginManagerLoginResult!, err: NSError!) -> Void in
+            loginManager.logInWithReadPermissions(READ_PERMISSIONS, handler: { (result: FBSDKLoginManagerLoginResult!, err: NSError!) -> Void in
                 self.log("Login behavior (after): \(behavior())")
                 if err != nil {
                     self.finish_error(command, msg: String(err))
