@@ -39,7 +39,9 @@ class FBConnect: CDVPlugin {
     }
     
     override func handleOpenURL(notification: NSNotification) {
-        FBSDKApplicationDelegate.sharedInstance().application(UIApplication.sharedApplication(), openURL: notification.object! as! NSURL, sourceApplication: nil, annotation: nil)
+        let url = notification.object! as! NSURL
+        let source = ""
+        FBSDKApplicationDelegate.sharedInstance().application(UIApplication.sharedApplication(), openURL: url, sourceApplication: source, annotation: nil)
     }
     
     private func finish_error(command: CDVInvokedUrlCommand, msg: String!) {
