@@ -91,6 +91,5 @@
         </podfile>
 
         <source-file src="platforms/ios/src/FBConnect.swift"/>
-        <bridging-header-file src="platforms/ios/src/Bridging-Header.h"/>
     </platform>
 </plugin>

@@ -1,4 +1,7 @@
 import Foundation
+import Cordova
+import FBSDKCoreKit
+import FBSDKLoginKit
 
 @objc(FBConnect)
 class FBConnect: CDVPlugin {
