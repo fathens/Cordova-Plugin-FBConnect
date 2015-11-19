@@ -59,7 +59,7 @@
         <config-file target="*-Info.plist" parent="FacebookAppID">
             <string>$APP_ID</string>
         </config-file>
-        
+
         <config-file target="*-Info.plist" parent="FacebookDisplayName">
             <string>$APP_NAME</string>
         </config-file>
@@ -96,7 +96,6 @@
         <podfile>
             <pod name="FBSDKCoreKit" version="~> 4.5.0" />
             <pod name="FBSDKLoginKit" version="~> 4.5.0" />
-            <pod name="FBSDKShareKit" version="~> 4.5.0" />
         </podfile>
 
         <source-file src="platforms/ios/src/FBConnect.swift"/>
