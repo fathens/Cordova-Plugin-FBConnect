@@ -38,7 +38,7 @@ class FBConnect: CDVPlugin {
         }
     }
     
-    func gainPermission(command: CDVInvokedUrlCommand) {
+    func gainPermissions(command: CDVInvokedUrlCommand) {
         fork {
             var reads: [String] = []
             var pubs: [String] = []
@@ -49,20 +49,16 @@ class FBConnect: CDVPlugin {
                     reads.append(perm)
                 }
             }
-            func finish() { self.finish_ok(command) }
+            func finish(ac: FBSDKAccessToken!) { self.finish_ok(command, result: ac.tokenString) }
             
             if reads.isEmpty {
-                self.permPublish(command, permissions: pubs) {
-                    finish()
-                }
+                self.accessToken.getCurrent({ self.permPublish(command, permissions: pubs) }, taker: finish)
             } else {
-                self.permRead(command, permissions: reads) {
-                    if pubs.isEmpty {
-                        finish()
-                    } else {
-                        self.permPublish(command, permissions: pubs) {
-                            finish()
-                        }
+                if pubs.isEmpty {
+                    self.accessToken.getCurrent({ self.permRead(command, permissions: reads) }, taker: finish)
+                } else {
+                    self.permRead(command, permissions: reads) {
+                        self.accessToken.getCurrent({ self.permPublish(command, permissions: pubs) }, taker: finish)
                     }
                 }
             }
