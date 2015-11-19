@@ -69,11 +69,14 @@ class FBConnect: CDVPlugin {
         }
     }
     
-    func getCurrentPermissions(command: CDVInvokedUrlCommand) {
+    func getToken(command: CDVInvokedUrlCommand) {
         fork {
-            var result: [String]? = nil
+            var result: [String: AnyObject]? = nil
             if let ac = FBSDKAccessToken.currentAccessToken() {
-                result = ac.permissions.map { String($0) }
+                result = [
+                    "token": ac.tokenString,
+                    "permissions": ac.permissions.map { String($0) }
+                ]
             }
             self.finish_ok(command, result: result)
         }
@@ -132,8 +135,6 @@ class FBConnect: CDVPlugin {
         log("Command Result: \(result)")
         if let msg = result as? String {
             commandDelegate!.sendPluginResult(CDVPluginResult(status: CDVCommandStatus_OK, messageAsString: msg), callbackId: command.callbackId)
-        } else if let array = result as? [String] {
-            commandDelegate!.sendPluginResult(CDVPluginResult(status: CDVCommandStatus_OK, messageAsArray: array), callbackId: command.callbackId)
         } else if let dict = result as? [String: AnyObject] {
             commandDelegate!.sendPluginResult(CDVPluginResult(status: CDVCommandStatus_OK, messageAsDictionary: dict), callbackId: command.callbackId)
         } else if result == nil {
