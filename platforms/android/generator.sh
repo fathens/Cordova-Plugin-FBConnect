@@ -18,6 +18,7 @@ repositories {
 }
 dependencies {
 	compile 'org.jetbrains.kotlin:kotlin-stdlib:0.14.449'
+	compile 'com.facebook.android:facebook-android-sdk:4.7.0'
 }
 
 android {
