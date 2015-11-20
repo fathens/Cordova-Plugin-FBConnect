@@ -45,7 +45,7 @@
 
         <source-file src="platforms/android/src/main/kotlin/FBConnect.kt" target-dir="kotlin/org.fathens.cordova.plugin.FBConnect"/>
 
-        <framework src="platforms/android/fbconnect.gradle" custom="true" type="gradleReference"/>
+        <framework src="platforms/android/plugin.gradle" custom="true" type="gradleReference"/>
     </platform>
 
     <platform name="ios">

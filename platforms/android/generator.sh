@@ -16,9 +16,11 @@ apply plugin: 'kotlin-android'
 repositories {
     mavenCentral()
 }
+
+apply from: "plugin.gradle"
+
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib:1.+"
-    compile 'com.facebook.android:facebook-android-sdk:4.8.+'
 }
 
 android {
