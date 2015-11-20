@@ -24,9 +24,10 @@ public class FBConnect: CordovaPlugin() {
     public fun login(callbackContext: CallbackContext, args: JSONArray): () -> Unit {
         return {
             val perms = (1..args.length()).map { args.getString(it -1) }.toArrayList()
+
             LoginManager.getInstance().registerCallback(CallbackManager.Factory.create(), object: FacebookCallback<LoginResult> {
                 override fun onSuccess(result: LoginResult?) {
-                    callbackContext.success()
+                    callbackContext.success(AccessToken.getCurrentAccessToken().token)
                 }
 
                 override fun onCancel() {
