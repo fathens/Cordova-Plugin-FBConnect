@@ -6,8 +6,8 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:1.3.1'
-        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:0.14.449'
+        classpath 'com.android.tools.build:gradle:1.+'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.+"
     }
 }
 apply plugin: 'com.android.application'
@@ -17,8 +17,8 @@ repositories {
     mavenCentral()
 }
 dependencies {
-	compile 'org.jetbrains.kotlin:kotlin-stdlib:0.14.449'
 	compile 'com.facebook.android:facebook-android-sdk:4.7.0'
+    compile "org.jetbrains.kotlin:kotlin-stdlib:1.+"
 }
 
 android {
@@ -31,19 +31,12 @@ android {
         }
     }
 }
-
-task cordova(type: Exec) {
-    executable "sh"
-    args '-c', 'git clone -b 4.1.x https://github.com/apache/cordova-android.git tmp && mv tmp/framework/src .cordova && rm -rf tmp'
-}
-task localProperties << {
-    file('local.properties').println java.lang.System.getenv()['ANDROID_HOME']
-}
-task prepare(dependsOn: [cordova, localProperties])
 EOF
 
+echo "sdk.dir=$ANDROID_HOME" > local.properties
+git clone -b 4.1.x https://github.com/apache/cordova-android.git tmp && mv tmp/framework/src .cordova && rm -rf tmp
+
 gradle wrapper --gradle-version 2.7
-./gradlew prepare
 
 echo "Generating project done"
 echo "Open by AndroidStudio. Thank you."
