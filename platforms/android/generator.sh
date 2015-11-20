@@ -17,8 +17,8 @@ repositories {
     mavenCentral()
 }
 dependencies {
-	compile 'com.facebook.android:facebook-android-sdk:4.7.0'
     compile "org.jetbrains.kotlin:kotlin-stdlib:1.+"
+    compile 'com.facebook.android:facebook-android-sdk:4.8.+'
 }
 
 android {
