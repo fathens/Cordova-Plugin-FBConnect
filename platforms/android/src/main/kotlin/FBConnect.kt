@@ -23,9 +23,8 @@ public class FBConnect: CordovaPlugin() {
 
     public fun login(callbackContext: CallbackContext, args: JSONArray): () -> Unit {
         return {
-            val msg = args.getString(0)
-            val cm  = CallbackManager.Factory.create()
-            LoginManager.getInstance().registerCallback(cm, object: FacebookCallback<LoginResult> {
+            val perms = (1..args.length()).map { args.getString(it -1) }.toArrayList()
+            LoginManager.getInstance().registerCallback(CallbackManager.Factory.create(), object: FacebookCallback<LoginResult> {
                 override fun onSuccess(result: LoginResult?) {
                     callbackContext.success()
                 }
@@ -35,10 +34,13 @@ public class FBConnect: CordovaPlugin() {
                 }
 
                 override fun onError(error: FacebookException?) {
-                    throw UnsupportedOperationException()
+                    callbackContext.error(error?.message ?: "")
                 }
             })
-            LoginManager.getInstance().logInWithReadPermissions(cordova.activity, listOf("public_profile"))
+            if (perms.isEmpty()) {
+                perms.add("public_profile")
+            }
+            LoginManager.getInstance().logInWithReadPermissions(cordova.activity, perms)
         }
     }
 }
