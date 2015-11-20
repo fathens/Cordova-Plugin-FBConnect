@@ -35,9 +35,10 @@ public class FBConnect: CordovaPlugin() {
                 }
 
                 override fun onError(error: FacebookException?) {
-                    callbackContext.error(error?.message ?: "")
+                    callbackContext.error("" + error)
                 }
             })
+
             if (perms.isEmpty()) {
                 perms.add("public_profile")
             }
