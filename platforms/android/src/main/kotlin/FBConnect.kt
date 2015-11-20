@@ -35,7 +35,7 @@ public class FBConnect: CordovaPlugin() {
                 }
 
                 override fun onError(error: FacebookException?) {
-                    callbackContext.error("" + error)
+                    callbackContext.error(error?.message ?: "")
                 }
             })
 
