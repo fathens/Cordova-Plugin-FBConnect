@@ -43,7 +43,7 @@
             <activity android:label="@string/fb_app_name" android:name="com.facebook.LoginActivity" android:theme="@android:style/Theme.Translucent.NoTitleBar"></activity>
         </config-file>
 
-        <source-file src="platforms/android/src/main/kotlin/FBConnect.kt" target-dir="kotlin/$PACKAGE_NAME"/>
+        <source-file src="platforms/android/src/main/kotlin/FBConnect.kt" target-dir="kotlin/org.fathens.cordova.plugin.FBConnect"/>
     </platform>
 
     <platform name="ios">
