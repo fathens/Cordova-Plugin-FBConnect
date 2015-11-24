@@ -1,8 +1,6 @@
 package org.fathens.cordova.plugin.fbconnect
 
-import com.facebook.CallbackManager
-import org.apache.cordova.CallbackContext
-import org.apache.cordova.CordovaPlugin
+import org.apache.cordova.*
 import org.json.*
 import com.facebook.*
 import com.facebook.login.*
@@ -27,42 +25,23 @@ public class FBConnect : CordovaPlugin() {
             if (obj != null) {
                 callback.success(obj)
             } else {
-                callback.success()
+                callback.success(null as? String)
             }
         }
     }
 
     private var context: PluginContext? = null
     private var profileTracker: ProfileListener? = null
-
-    override fun onDestroy() {
-        profileTracker?.stopTracking()
-    }
-
-    override fun execute(action: String, args: JSONArray, callbackContext: CallbackContext): Boolean {
-        try {
-            val method = javaClass.getMethod(action, args.javaClass)
-            if (method != null) {
-                cordova.setActivityResultCallback(this)
-                cordova.threadPool.execute {
-                    context = PluginContext(this, action, callbackContext)
-                    method.invoke(this, args)
-                }
-                return true
-            } else {
-                return false
-            }
-        } catch (e: NoSuchMethodException) {
-            return false
-        }
-    }
+    private var callbackManager: CallbackManager? = null
 
     override fun pluginInitialize() {
         FacebookSdk.sdkInitialize(cordova.activity.applicationContext)
 
         profileTracker = ProfileListener(this)
 
-        LoginManager.getInstance().registerCallback(CallbackManager.Factory.create(), object : FacebookCallback<LoginResult> {
+        callbackManager = CallbackManager.Factory.create()
+
+        LoginManager.getInstance().registerCallback(callbackManager, object : FacebookCallback<LoginResult> {
             override fun onSuccess(result: LoginResult?) {
                 when (context?.action) {
                     "login" -> context?.success(AccessToken.getCurrentAccessToken().token)
@@ -79,6 +58,33 @@ public class FBConnect : CordovaPlugin() {
         })
     }
 
+    override fun execute(action: String, args: JSONArray, callbackContext: CallbackContext): Boolean {
+        try {
+            val method = javaClass.getMethod(action, args.javaClass)
+            if (method != null) {
+                cordova.threadPool.execute {
+                    context = PluginContext(this, action, callbackContext)
+                    method.invoke(this, args)
+                }
+                return true
+            } else {
+                return false
+            }
+        } catch (e: NoSuchMethodException) {
+            return false
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, intent: android.content.Intent?) {
+        super.onActivityResult(requestCode, resultCode, intent)
+        callbackManager?.onActivityResult(requestCode, resultCode, intent)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        profileTracker?.stopTracking()
+    }
+
     public fun login(args: JSONArray) {
         val permissions = (0..args.length() - 1).map { args.getString(it) }.toArrayList()
         if (permissions.isEmpty()) {
@@ -91,8 +97,12 @@ public class FBConnect : CordovaPlugin() {
             }
         }
         if (reads.isNotEmpty() && pubs.isNotEmpty()) {
-            context?.error("Cannot use permissions of both read and publish")
+            context?.error("Cannot ask for both read and publish permissions")
         }
+        assert(reads.isNotEmpty() || pubs.isNotEmpty())
+
+        cordova.setActivityResultCallback(this)
+
         if (reads.isNotEmpty()) {
             LoginManager.getInstance().logInWithReadPermissions(cordova.activity, reads)
         }
