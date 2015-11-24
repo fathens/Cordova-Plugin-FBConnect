@@ -17,32 +17,9 @@ class FBConnect: CDVPlugin {
             if perms.count < 1 {
                 perms.append("public_profile")
             }
-            self.accessToken.getCurrent({ self.permRead(command, permissions: perms) }) {
-                self.finish_ok(command, result: $0.tokenString)
-            }
-        }
-    }
-    
-    func logout(command: CDVInvokedUrlCommand) {
-        fork {
-            log("Logout now!")
-            FBSDKLoginManager.init().logOut()
-        }
-    }
-    
-    func getName(command: CDVInvokedUrlCommand) {
-        fork {
-            self.profile.getCurrent({ self.permRead(command, permissions: ["public_profile"]) }) {
-                self.finish_ok(command, result: $0.name)
-            }
-        }
-    }
-    
-    func gainPermissions(command: CDVInvokedUrlCommand) {
-        fork {
             var reads: [String] = []
             var pubs: [String] = []
-            command.arguments.map { $0 as! String }.forEach { perm in
+            perms.forEach { perm in
                 if self.isPublishPermission(perm) {
                     pubs.append(perm)
                 } else {
@@ -61,6 +38,21 @@ class FBConnect: CDVPlugin {
                         self.accessToken.getCurrent({ self.permPublish(command, permissions: pubs) }, taker: finish)
                     }
                 }
+            }
+        }
+    }
+    
+    func logout(command: CDVInvokedUrlCommand) {
+        fork {
+            log("Logout now!")
+            FBSDKLoginManager.init().logOut()
+        }
+    }
+    
+    func getName(command: CDVInvokedUrlCommand) {
+        fork {
+            self.profile.getCurrent({ self.permRead(command, permissions: ["public_profile"]) }) {
+                self.finish_ok(command, result: $0.name)
             }
         }
     }

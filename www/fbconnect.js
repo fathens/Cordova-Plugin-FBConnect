@@ -2,7 +2,7 @@ var cordova = require("cordova/exec");
 
 var pluginName = "FBConnectPlugin"
 
-var names = [ "login", "logout", "gainPermissions", "getToken", "getName" ];
+var names = [ "login", "logout", "getToken", "getName" ];
 
 var obj = {};
 
