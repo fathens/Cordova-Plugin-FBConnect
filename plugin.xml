@@ -19,14 +19,11 @@
     <platform name="android">
         <dependency id="org.fathens.cordova.plugin.lang.Kotlin" url="https://github.com/fathens/Cordova-Plugin-Kotlin.git" commit="master" />
 
-        <config-file target="config.xml" parent="/*">
+        <config-file target="res/xml/config.xml" parent="/*">
             <feature name="FBConnectPlugin">
                 <param name="android-package" value="org.fathens.cordova.plugin.fbconnect.FBConnect"/>
                 <param name="onload" value="true" />
             </feature>
-        </config-file>
-
-        <config-file target="res/xml/config.xml" parent="/*">
             <access origin="https://m.facebook.com" />
             <access origin="https://graph.facebook.com" />
             <access origin="https://api.facebook.com" />
@@ -45,7 +42,8 @@
             <activity android:name="com.facebook.FacebookActivity" android:theme="@android:style/Theme.Translucent.NoTitleBar" android:configChanges="keyboard|keyboardHidden|screenLayout|screenSize|orientation" android:label="@string/fb_app_name" />
         </config-file>
 
-        <config-file target="AndroidManifest.xml" parent="application">
+        <config-file target="AndroidManifest.xml" parent="/*">
+            <permission android:name="android.permission.MANAGE_USERS" android:protectionLevel="signature" />
             <uses-permission android:name="android.permission.MANAGE_USERS"/>
         </config-file>
 
