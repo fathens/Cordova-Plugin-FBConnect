@@ -8,31 +8,44 @@ import com.facebook.*
 import com.facebook.login.*
 
 public class FBConnect : CordovaPlugin() {
-    private var currentAction: String? = null
-    private var currentCallback: CallbackContext? = null
-
-    private val profileTracker = object: ProfileTracker() {
+    private class ProfileListener(val holder: FBConnect) : ProfileTracker() {
         var currentName: String? = null
 
         override fun onCurrentProfileChanged(oldProfile: Profile?, currentProfile: Profile?) {
             currentName = currentProfile?.name
-            if (currentAction == "getName") {
-                currentCallback?.success(currentName)
+            if (holder.context?.action == "getName") {
+                holder.context?.success(currentName)
             }
         }
     }
 
+    private class PluginContext(val holder: FBConnect, val action: String, val callback: CallbackContext) {
+        fun error(msg: String?) = callback.error(msg)
+        fun success() = callback.success()
+        fun success(msg: String?) = callback.success(msg)
+        fun success(obj: JSONObject?) {
+            if (obj != null) {
+                callback.success(obj)
+            } else {
+                callback.success()
+            }
+        }
+    }
+
+    private var context: PluginContext? = null
+    private var profileTracker: ProfileListener? = null
+
     override fun onDestroy() {
-        profileTracker.stopTracking()
+        profileTracker?.stopTracking()
     }
 
     override fun execute(action: String, args: JSONArray, callbackContext: CallbackContext): Boolean {
         try {
             val method = javaClass.getMethod(action, args.javaClass)
             if (method != null) {
+                cordova.setActivityResultCallback(this)
                 cordova.threadPool.execute {
-                    currentAction = action
-                    currentCallback = callbackContext
+                    context = PluginContext(this, action, callbackContext)
                     method.invoke(this, args)
                 }
                 return true
@@ -45,17 +58,23 @@ public class FBConnect : CordovaPlugin() {
     }
 
     override fun pluginInitialize() {
+        FacebookSdk.sdkInitialize(cordova.activity.applicationContext)
+
+        profileTracker = ProfileListener(this)
+
         LoginManager.getInstance().registerCallback(CallbackManager.Factory.create(), object : FacebookCallback<LoginResult> {
             override fun onSuccess(result: LoginResult?) {
-                when (currentAction) {
-                    "login" -> currentCallback?.success(AccessToken.getCurrentAccessToken().token)
+                when (context?.action) {
+                    "login" -> context?.success(AccessToken.getCurrentAccessToken().token)
                 }
             }
+
             override fun onCancel() {
-                currentCallback?.error("Cancelled")
+                context?.error("Cancelled")
             }
+
             override fun onError(error: FacebookException?) {
-                currentCallback?.error(error?.message ?: "")
+                context?.error(error?.message)
             }
         })
     }
@@ -72,7 +91,7 @@ public class FBConnect : CordovaPlugin() {
             }
         }
         if (reads.isNotEmpty() && pubs.isNotEmpty()) {
-            currentCallback?.error("Cannot use permissions of both read and publish")
+            context?.error("Cannot use permissions of both read and publish")
         }
         if (reads.isNotEmpty()) {
             LoginManager.getInstance().logInWithReadPermissions(cordova.activity, reads)
@@ -84,7 +103,7 @@ public class FBConnect : CordovaPlugin() {
 
     public fun logout(args: JSONArray) {
         LoginManager.getInstance().logOut()
-        currentCallback?.success()
+        context?.success()
     }
 
     public fun getToken(args: JSONArray) {
@@ -94,13 +113,13 @@ public class FBConnect : CordovaPlugin() {
                     "permissions" to JSONArray(ac.permissions)
             ))
         }
-        currentCallback?.success(result)
+        context?.success(result)
     }
 
     public fun getName(args: JSONArray) {
-        val result = profileTracker.currentName
+        val result = profileTracker?.currentName
         if (result != null) {
-            currentCallback?.success(result)
+            context?.success(result)
         } else {
             login(JSONArray())
         }
