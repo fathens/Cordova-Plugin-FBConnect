@@ -26,17 +26,18 @@ class FBConnect: CDVPlugin {
                     reads.append(perm)
                 }
             }
-            func finish(ac: FBSDKAccessToken!) { self.finish_ok(command, result: ac.tokenString) }
-            
-            if reads.isEmpty {
-                self.accessToken.getCurrent({ self.permPublish(command, permissions: pubs) }, taker: finish)
+            if !reads.isEmpty && !pubs.isEmpty {
+                self.finish_error(command, msg: "Cannot ask for both read and publish permissions")
             } else {
-                if pubs.isEmpty {
+                assert(!reads.isEmpty || !pubs.isEmpty)
+                
+                func finish(ac: FBSDKAccessToken!) { self.finish_ok(command, result: ac.tokenString) }
+                
+                if !reads.isEmpty {
                     self.accessToken.getCurrent({ self.permRead(command, permissions: reads) }, taker: finish)
-                } else {
-                    self.permRead(command, permissions: reads) {
-                        self.accessToken.getCurrent({ self.permPublish(command, permissions: pubs) }, taker: finish)
-                    }
+                }
+                if !pubs.isEmpty {
+                    self.accessToken.getCurrent({ self.permPublish(command, permissions: pubs) }, taker: finish)
                 }
             }
         }

@@ -98,16 +98,17 @@ public class FBConnect : CordovaPlugin() {
         }
         if (reads.isNotEmpty() && pubs.isNotEmpty()) {
             context?.error("Cannot ask for both read and publish permissions")
-        }
-        assert(reads.isNotEmpty() || pubs.isNotEmpty())
+        } else {
+            assert(reads.isNotEmpty() || pubs.isNotEmpty())
 
-        cordova.setActivityResultCallback(this)
+            cordova.setActivityResultCallback(this)
 
-        if (reads.isNotEmpty()) {
-            LoginManager.getInstance().logInWithReadPermissions(cordova.activity, reads)
-        }
-        if (pubs.isNotEmpty()) {
-            LoginManager.getInstance().logInWithPublishPermissions(cordova.activity, pubs)
+            if (reads.isNotEmpty()) {
+                LoginManager.getInstance().logInWithReadPermissions(cordova.activity, reads)
+            }
+            if (pubs.isNotEmpty()) {
+                LoginManager.getInstance().logInWithPublishPermissions(cordova.activity, pubs)
+            }
         }
     }
 
