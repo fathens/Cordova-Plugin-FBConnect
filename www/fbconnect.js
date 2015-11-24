@@ -14,7 +14,7 @@ names.forEach(function(methodName) {
 		cordova(function(result) {
 			callback(null, result);
 		}, function(error) {
-			callback(error);
+			callback(error, null);
 		}, pluginName, methodName, args);
 	}
 });
