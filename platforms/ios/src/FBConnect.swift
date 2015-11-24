@@ -47,6 +47,7 @@ class FBConnect: CDVPlugin {
         fork {
             log("Logout now!")
             FBSDKLoginManager.init().logOut()
+            self.finish_ok(command)
         }
     }
     
