@@ -19,13 +19,13 @@ public class FBConnect : CordovaPlugin() {
 
     private class PluginContext(val holder: FBConnect, val action: String, val callback: CallbackContext) {
         fun error(msg: String?) = callback.error(msg)
-        fun success() = callback.success()
+        fun success() = callback.success(null as? String)
         fun success(msg: String?) = callback.success(msg)
         fun success(obj: JSONObject?) {
             if (obj != null) {
                 callback.success(obj)
             } else {
-                callback.success(null as? String)
+                success()
             }
         }
     }
