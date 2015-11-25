@@ -17,8 +17,28 @@ class FBConnect: CDVPlugin {
             if perms.count < 1 {
                 perms.append("public_profile")
             }
-            self.accessToken.getCurrent({ self.permRead(command, permissions: perms) }) {
-                self.finish_ok(command, result: $0.tokenString)
+            var reads: [String] = []
+            var pubs: [String] = []
+            perms.forEach { perm in
+                if self.isPublishPermission(perm) {
+                    pubs.append(perm)
+                } else {
+                    reads.append(perm)
+                }
+            }
+            if !reads.isEmpty && !pubs.isEmpty {
+                self.finish_error(command, msg: "Cannot ask for both read and publish permissions")
+            } else {
+                assert(!reads.isEmpty || !pubs.isEmpty)
+                
+                func finish(ac: FBSDKAccessToken!) { self.finish_ok(command, result: ac.tokenString) }
+                
+                if !reads.isEmpty {
+                    self.accessToken.getCurrent({ self.permRead(command, permissions: reads) }, taker: finish)
+                }
+                if !pubs.isEmpty {
+                    self.accessToken.getCurrent({ self.permPublish(command, permissions: pubs) }, taker: finish)
+                }
             }
         }
     }
@@ -27,6 +47,7 @@ class FBConnect: CDVPlugin {
         fork {
             log("Logout now!")
             FBSDKLoginManager.init().logOut()
+            self.finish_ok(command)
         }
     }
     
@@ -34,33 +55,6 @@ class FBConnect: CDVPlugin {
         fork {
             self.profile.getCurrent({ self.permRead(command, permissions: ["public_profile"]) }) {
                 self.finish_ok(command, result: $0.name)
-            }
-        }
-    }
-    
-    func gainPermissions(command: CDVInvokedUrlCommand) {
-        fork {
-            var reads: [String] = []
-            var pubs: [String] = []
-            command.arguments.map { $0 as! String }.forEach { perm in
-                if self.isPublishPermission(perm) {
-                    pubs.append(perm)
-                } else {
-                    reads.append(perm)
-                }
-            }
-            func finish(ac: FBSDKAccessToken!) { self.finish_ok(command, result: ac.tokenString) }
-            
-            if reads.isEmpty {
-                self.accessToken.getCurrent({ self.permPublish(command, permissions: pubs) }, taker: finish)
-            } else {
-                if pubs.isEmpty {
-                    self.accessToken.getCurrent({ self.permRead(command, permissions: reads) }, taker: finish)
-                } else {
-                    self.permRead(command, permissions: reads) {
-                        self.accessToken.getCurrent({ self.permPublish(command, permissions: pubs) }, taker: finish)
-                    }
-                }
             }
         }
     }
