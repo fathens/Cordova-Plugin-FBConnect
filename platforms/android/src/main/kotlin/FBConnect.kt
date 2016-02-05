@@ -86,7 +86,7 @@ public class FBConnect : CordovaPlugin() {
     }
 
     public fun login(args: JSONArray) {
-        val permissions = (0..args.length() - 1).map { args.getString(it) }.toArrayList()
+        val permissions = (0..args.length() - 1).map { args.getString(it) }.toMutableList()
         if (permissions.isEmpty()) {
             permissions.add("public_profile")
         }
