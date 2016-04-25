@@ -9,7 +9,13 @@ var obj = {};
 names.forEach(function(methodName) {
     obj[methodName] = function() {
         return new Promise(function(resolve, reject) {
-            cordova(resolve, reject, pluginName, methodName, arguments);
+            cordova(function(result) {
+                console.log('Result of ' + pluginName + ': ' + result);
+                resolve(result);
+            }, function(err) {
+                console.log('Error of ' + pluginName + ': ' + err);
+                reject(err);
+            }, pluginName, methodName, arguments);
         });
     }
 });
