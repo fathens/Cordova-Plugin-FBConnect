@@ -8,12 +8,19 @@ var obj = {};
 
 names.forEach(function(methodName) {
     obj[methodName] = function() {
+        var log = function(msg) {
+            if (obj.logger) {
+                logger.debug(msg);
+            } else {
+                console.log(msg);
+            }
+        }
         return new Promise(function(resolve, reject) {
             cordova(function(result) {
-                console.log('Result of ' + pluginName + ': ' + result);
+                log('Result of ' + pluginName + ': ' + result);
                 resolve(result);
             }, function(err) {
-                console.log('Error of ' + pluginName + ': ' + err);
+                log('Error of ' + pluginName + ': ' + err);
                 reject(err);
             }, pluginName, methodName, arguments);
         });
