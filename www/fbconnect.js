@@ -8,25 +8,9 @@ var obj = {};
 
 names.forEach(function(methodName) {
     obj[methodName] = function() {
-        var log = function(msg) {
-            if (obj.logger) {
-                obj.logger.debug(function() {
-                    return '(' + methodName + ') ' + msg;
-                });
-            } else {
-                console.log(msg);
-            }
-        }
         var args = Array.prototype.slice.call(arguments, 0);
-        log('Arguments: ' + JSON.stringify(args));
         return new Promise(function(resolve, reject) {
-            cordova(function(result) {
-                log('Result: ' + result);
-                resolve(result);
-            }, function(err) {
-                log('Error: ' + err);
-                reject(err);
-            }, pluginName, methodName, args);
+            cordova(resolve, reject, pluginName, methodName, args);
         });
     }
 });
