@@ -10,7 +10,7 @@ names.forEach(function(methodName) {
     obj[methodName] = function() {
         var log = function(msg) {
             if (obj.logger) {
-                logger.debug(function() {
+                obj.logger.debug(function() {
                     return '(' + methodName + ') ' + msg;
                 });
             } else {
