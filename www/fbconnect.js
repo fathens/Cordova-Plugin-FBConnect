@@ -11,20 +11,22 @@ names.forEach(function(methodName) {
         var log = function(msg) {
             if (obj.logger) {
                 logger.debug(function() {
-                    return msg;
+                    return '(' + methodName + ') ' + msg;
                 });
             } else {
                 console.log(msg);
             }
         }
+        var args = Array.prototype.slice.call(arguments, 0);
+        log('Arguments: ' + JSON.stringify(args));
         return new Promise(function(resolve, reject) {
             cordova(function(result) {
-                log('Result of ' + pluginName + ': ' + result);
+                log('Result: ' + result);
                 resolve(result);
             }, function(err) {
-                log('Error of ' + pluginName + ': ' + err);
+                log('Error: ' + err);
                 reject(err);
-            }, pluginName, methodName, arguments);
+            }, pluginName, methodName, args);
         });
     }
 });
