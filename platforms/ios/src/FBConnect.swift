@@ -76,7 +76,7 @@ class FBConnect: CDVPlugin {
     
     override func handleOpenURL(notification: NSNotification) {
         let url = notification.object! as! NSURL
-        let source = url.absoluteString.hasPrefix("fb") ? "com.facebook.Facebook": ""
+        let source = url.absoluteString!.hasPrefix("fb") ? "com.facebook.Facebook": ""
         FBSDKApplicationDelegate.sharedInstance().application(UIApplication.sharedApplication(), openURL: url, sourceApplication: source, annotation: nil)
     }
     
