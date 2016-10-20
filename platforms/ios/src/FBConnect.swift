@@ -3,7 +3,7 @@ import Cordova
 import FBSDKCoreKit
 import FBSDKLoginKit
 
-private func log(msg: String) {
+private func log(_ msg: String) {
     print(msg)
 }
 
@@ -11,7 +11,7 @@ private func log(msg: String) {
 class FBConnect: CDVPlugin {
     // MARK: - Plugin Commands
     
-    func login(command: CDVInvokedUrlCommand) {
+    func login(_ command: CDVInvokedUrlCommand) {
         fork {
             var perms = command.arguments.map { $0 as! String }
             if perms.count < 1 {
@@ -31,7 +31,7 @@ class FBConnect: CDVPlugin {
             } else {
                 assert(!reads.isEmpty || !pubs.isEmpty)
                 
-                func finish(ac: FBSDKAccessToken!) { self.finish_ok(command, result: ac.tokenString) }
+                func finish(_ ac: FBSDKAccessToken!) { self.finish_ok(command, result: ac.tokenString as AnyObject?) }
                 
                 if !reads.isEmpty {
                     self.accessToken.getCurrent({ self.permRead(command, permissions: reads) }, taker: finish)
@@ -43,7 +43,7 @@ class FBConnect: CDVPlugin {
         }
     }
     
-    func logout(command: CDVInvokedUrlCommand) {
+    func logout(_ command: CDVInvokedUrlCommand) {
         fork {
             log("Logout now!")
             FBSDKLoginManager.init().logOut()
@@ -51,95 +51,95 @@ class FBConnect: CDVPlugin {
         }
     }
     
-    func getName(command: CDVInvokedUrlCommand) {
+    func getName(_ command: CDVInvokedUrlCommand) {
         fork {
             self.profile.getCurrent({ self.permRead(command, permissions: ["public_profile"]) }) {
-                self.finish_ok(command, result: $0.name)
+                self.finish_ok(command, result: $0.name as AnyObject?)
             }
         }
     }
     
-    func getToken(command: CDVInvokedUrlCommand) {
+    func getToken(_ command: CDVInvokedUrlCommand) {
         fork {
             var result: [String: AnyObject]? = nil
-            if let ac = FBSDKAccessToken.currentAccessToken() {
+            if let ac = FBSDKAccessToken.current() {
                 result = [
-                    "token": ac.tokenString,
+                    "token": ac.tokenString as AnyObject,
                     "permissions": ac.permissions.map { String($0) }
                 ]
             }
-            self.finish_ok(command, result: result)
+            self.finish_ok(command, result: result as AnyObject?)
         }
     }
     
     // MARK: - Override Methods
     
-    override func handleOpenURL(notification: NSNotification) {
-        let url = notification.object! as! NSURL
-        let source = url.absoluteString!.hasPrefix("fb") ? "com.facebook.Facebook": ""
-        FBSDKApplicationDelegate.sharedInstance().application(UIApplication.sharedApplication(), openURL: url, sourceApplication: source, annotation: nil)
+    override func handleOpenURL(_ notification: Notification) {
+        let url = notification.object! as! URL
+        let source = url.absoluteString.hasPrefix("fb") ? "com.facebook.Facebook": ""
+        FBSDKApplicationDelegate.sharedInstance().application(UIApplication.shared, open: url, sourceApplication: source, annotation: nil)
     }
     
     override func pluginInitialize() {
-        func observe(name: String, selector: Selector) {
-            NSNotificationCenter.defaultCenter().addObserver(self, selector: selector, name: name, object: nil)
+        func observe(_ name: String, selector: Selector) {
+            NotificationCenter.default.addObserver(self, selector: selector, name: NSNotification.Name(rawValue: name), object: nil)
         }
-        observe(UIApplicationDidFinishLaunchingNotification, selector: "finishLaunching:")
-        observe(UIApplicationDidBecomeActiveNotification, selector: "becomeActive:")
-        observe(FBSDKAccessTokenDidChangeNotification, selector: "changeAccessToken:")
-        observe(FBSDKProfileDidChangeNotification, selector: "changeProfile:")
+        observe(NSNotification.Name.UIApplicationDidFinishLaunching.rawValue, selector: #selector(FBConnect.finishLaunching(_:)))
+        observe(NSNotification.Name.UIApplicationDidBecomeActive.rawValue, selector: #selector(FBConnect.becomeActive(_:)))
+        observe(NSNotification.Name.FBSDKAccessTokenDidChange.rawValue, selector: #selector(FBConnect.changeAccessToken(_:)))
+        observe(NSNotification.Name.FBSDKProfileDidChange.rawValue, selector: #selector(FBConnect.changeProfile(_:)))
     }
     
     // MARK: - Event Listeners
     
-    func finishLaunching(notification: NSNotification) {
-        let options = notification.userInfo != nil ? notification.userInfo : [:]
-        FBSDKApplicationDelegate.sharedInstance().application(UIApplication.sharedApplication(), didFinishLaunchingWithOptions: options)
-        FBSDKProfile.enableUpdatesOnAccessTokenChange(true)
+    func finishLaunching(_ notification: Notification) {
+        let options = (notification as NSNotification).userInfo != nil ? (notification as NSNotification).userInfo : [:]
+        FBSDKApplicationDelegate.sharedInstance().application(UIApplication.shared, didFinishLaunchingWithOptions: options)
+        FBSDKProfile.enableUpdates(onAccessTokenChange: true)
         renewCredentials()
     }
     
-    func becomeActive(notification: NSNotification) {
+    func becomeActive(_ notification: Notification) {
         FBSDKAppEvents.activateApp()
     }
     
-    func changeProfile(notification: NSNotification) {
-        profile.setCurrent(FBSDKProfile.currentProfile())
+    func changeProfile(_ notification: Notification) {
+        profile.setCurrent(FBSDKProfile.current())
     }
     
-    func changeAccessToken(notification: NSNotification) {
-        accessToken.setCurrent(FBSDKAccessToken.currentAccessToken())
+    func changeAccessToken(_ notification: Notification) {
+        accessToken.setCurrent(FBSDKAccessToken.current())
     }
     
     // MARK: - Private Utillities
     
-    private func fork(proc: () -> Void) {
-        dispatch_async(dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), proc)
+    fileprivate func fork(_ proc: @escaping () -> Void) {
+        DispatchQueue.global(qos: DispatchQoS.QoSClass.utility).async(execute: proc)
     }
     
-    private func finish_error(command: CDVInvokedUrlCommand, msg: String!) {
-        commandDelegate!.sendPluginResult(CDVPluginResult(status: CDVCommandStatus_ERROR, messageAsString: msg), callbackId: command.callbackId)
+    fileprivate func finish_error(_ command: CDVInvokedUrlCommand, msg: String!) {
+        commandDelegate!.send(CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: msg), callbackId: command.callbackId)
     }
     
-    private func finish_ok(command: CDVInvokedUrlCommand, result: AnyObject? = nil) {
+    fileprivate func finish_ok(_ command: CDVInvokedUrlCommand, result: AnyObject? = nil) {
         log("Command Result: \(result)")
         if let msg = result as? String {
-            commandDelegate!.sendPluginResult(CDVPluginResult(status: CDVCommandStatus_OK, messageAsString: msg), callbackId: command.callbackId)
+            commandDelegate!.send(CDVPluginResult(status: CDVCommandStatus_OK, messageAs: msg), callbackId: command.callbackId)
         } else if let dict = result as? [String: AnyObject] {
-            commandDelegate!.sendPluginResult(CDVPluginResult(status: CDVCommandStatus_OK, messageAsDictionary: dict), callbackId: command.callbackId)
+            commandDelegate!.send(CDVPluginResult(status: CDVCommandStatus_OK, messageAs: dict), callbackId: command.callbackId)
         } else if result == nil {
-            commandDelegate!.sendPluginResult(CDVPluginResult(status: CDVCommandStatus_OK), callbackId: command.callbackId)
+            commandDelegate!.send(CDVPluginResult(status: CDVCommandStatus_OK), callbackId: command.callbackId)
         }
     }
     
-    private func renewCredentials() {
+    fileprivate func renewCredentials() {
         FBSDKLoginManager.renewSystemCredentials { (result: ACAccountCredentialRenewResult, err: NSError!) -> Void in
             if err == nil {
                 func readMsg() -> String {
                     switch result {
-                    case .Failed: return "Failed"
-                    case .Rejected: return "Rejected"
-                    case .Renewed: return "Renewed"
+                    case .failed: return "Failed"
+                    case .rejected: return "Rejected"
+                    case .renewed: return "Renewed"
                     }
                 }
                 log("Result of renewSystemCredentials \(readMsg())")
@@ -149,8 +149,8 @@ class FBConnect: CDVPlugin {
         }
     }
     
-    private func permRead(command: CDVInvokedUrlCommand, permissions: [String], finish: (() -> Void)? = nil) {
-        FBSDKLoginManager.init().logInWithReadPermissions(permissions) { (result: FBSDKLoginManagerLoginResult!, err: NSError!) -> Void in
+    fileprivate func permRead(_ command: CDVInvokedUrlCommand, permissions: [String], finish: (() -> Void)? = nil) {
+        FBSDKLoginManager.init().logIn(withReadPermissions: permissions) { (result: FBSDKLoginManagerLoginResult!, err: NSError!) -> Void in
             log("Result of logInWithReadPermissions: \(result), Error: \(err)")
             if err != nil {
                 self.finish_error(command, msg: String(err))
@@ -164,8 +164,8 @@ class FBConnect: CDVPlugin {
         }
     }
     
-    private func permPublish(command: CDVInvokedUrlCommand, permissions: [String], finish: (() -> Void)? = nil) {
-        FBSDKLoginManager.init().logInWithPublishPermissions(permissions)  { (result: FBSDKLoginManagerLoginResult!, err: NSError!) -> Void in
+    fileprivate func permPublish(_ command: CDVInvokedUrlCommand, permissions: [String], finish: (() -> Void)? = nil) {
+        FBSDKLoginManager.init().logIn(withPublishPermissions: permissions)  { (result: FBSDKLoginManagerLoginResult!, err: NSError!) -> Void in
             log("Result of logInWithPublishPermissions: \(result), Error: \(err)")
             if err != nil {
                 self.finish_error(command, msg: String(err))
@@ -179,21 +179,21 @@ class FBConnect: CDVPlugin {
         }
     }
     
-    private func isPublishPermission(perm: String) -> Bool {
+    fileprivate func isPublishPermission(_ perm: String) -> Bool {
         return perm.hasPrefix("publish") || perm.hasPrefix("manage") || perm == "ads_management" || perm == "create_event" || perm == "rsvp_event"
     }
     
-    private let profile = ChangeKeeper<FBSDKProfile>()
-    private let accessToken = ChangeKeeper<FBSDKAccessToken>()
+    fileprivate let profile = ChangeKeeper<FBSDKProfile>()
+    fileprivate let accessToken = ChangeKeeper<FBSDKAccessToken>()
 }
 
 // MARK: - Helper
 
 class ChangeKeeper<T> {
-    private var current: T? = nil
-    private var listenersSet: [T! -> Void] = []
+    fileprivate var current: T? = nil
+    fileprivate var listenersSet: [(T?) -> Void] = []
     
-    func getCurrent(refresher: () -> Void, taker: T! -> Void) {
+    func getCurrent(_ refresher: () -> Void, taker: @escaping (T!) -> Void) {
         log("Get current(\(self)): \(current)")
         if let v = current {
             taker(v)
@@ -203,7 +203,7 @@ class ChangeKeeper<T> {
         }
     }
     
-    func setCurrent(given: T?) {
+    func setCurrent(_ given: T?) {
         log("Set current(\(self)): \(given)")
         current = given
         if let v = given {
@@ -212,7 +212,7 @@ class ChangeKeeper<T> {
         }
     }
     
-    func listenOnSet(proc: T! -> Void) {
+    func listenOnSet(_ proc: @escaping (T!) -> Void) {
         listenersSet.append(proc)
     }
 }
