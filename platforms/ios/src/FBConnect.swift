@@ -31,7 +31,7 @@ class FBConnect: CDVPlugin {
             } else {
                 assert(!reads.isEmpty || !pubs.isEmpty)
                 
-                func finish(_ ac: FBSDKAccessToken!) { self.finish_ok(command, result: ac.tokenString as AnyObject?) }
+                func finish(_ ac: FBSDKAccessToken?) { self.finish_ok(command, result: ac?.tokenString as AnyObject?) }
                 
                 if !reads.isEmpty {
                     self.accessToken.getCurrent({ self.permRead(command, permissions: reads) }, taker: finish)
@@ -54,7 +54,7 @@ class FBConnect: CDVPlugin {
     func getName(_ command: CDVInvokedUrlCommand) {
         fork {
             self.profile.getCurrent({ self.permRead(command, permissions: ["public_profile"]) }) {
-                self.finish_ok(command, result: $0.name as AnyObject?)
+                self.finish_ok(command, result: $0?.name as AnyObject?)
             }
         }
     }
@@ -65,7 +65,7 @@ class FBConnect: CDVPlugin {
             if let ac = FBSDKAccessToken.current() {
                 result = [
                     "token": ac.tokenString as AnyObject,
-                    "permissions": ac.permissions.map { String($0) }
+                    "permissions": ac.permissions.map { String(describing: $0) } as AnyObject
                 ]
             }
             self.finish_ok(command, result: result as AnyObject?)
@@ -133,7 +133,7 @@ class FBConnect: CDVPlugin {
     }
     
     fileprivate func renewCredentials() {
-        FBSDKLoginManager.renewSystemCredentials { (result: ACAccountCredentialRenewResult, err: NSError!) -> Void in
+        FBSDKLoginManager.renewSystemCredentials { (result: ACAccountCredentialRenewResult, err: Error?) -> Void in
             if err == nil {
                 func readMsg() -> String {
                     switch result {
@@ -150,11 +150,11 @@ class FBConnect: CDVPlugin {
     }
     
     fileprivate func permRead(_ command: CDVInvokedUrlCommand, permissions: [String], finish: (() -> Void)? = nil) {
-        FBSDKLoginManager.init().logIn(withReadPermissions: permissions) { (result: FBSDKLoginManagerLoginResult!, err: NSError!) -> Void in
+        FBSDKLoginManager.init().logIn(withReadPermissions: permissions) { (result, err) -> Void in
             log("Result of logInWithReadPermissions: \(result), Error: \(err)")
             if err != nil {
-                self.finish_error(command, msg: String(err))
-            } else if result.isCancelled {
+                self.finish_error(command, msg: String(describing: err))
+            } else if result!.isCancelled {
                 self.finish_error(command, msg: "Cancelled")
             } else {
                 if let fin = finish {
@@ -165,11 +165,11 @@ class FBConnect: CDVPlugin {
     }
     
     fileprivate func permPublish(_ command: CDVInvokedUrlCommand, permissions: [String], finish: (() -> Void)? = nil) {
-        FBSDKLoginManager.init().logIn(withPublishPermissions: permissions)  { (result: FBSDKLoginManagerLoginResult!, err: NSError!) -> Void in
+        FBSDKLoginManager.init().logIn(withPublishPermissions: permissions)  { (result, err) -> Void in
             log("Result of logInWithPublishPermissions: \(result), Error: \(err)")
             if err != nil {
-                self.finish_error(command, msg: String(err))
-            } else if result.isCancelled {
+                self.finish_error(command, msg: String(describing: err))
+            } else if result!.isCancelled {
                 self.finish_error(command, msg: "Cancelled")
             } else {
                 if let fin = finish {
@@ -193,7 +193,7 @@ class ChangeKeeper<T> {
     fileprivate var current: T? = nil
     fileprivate var listenersSet: [(T?) -> Void] = []
     
-    func getCurrent(_ refresher: () -> Void, taker: @escaping (T!) -> Void) {
+    func getCurrent(_ refresher: () -> Void, taker: @escaping (T?) -> Void) {
         log("Get current(\(self)): \(current)")
         if let v = current {
             taker(v)
@@ -212,7 +212,7 @@ class ChangeKeeper<T> {
         }
     }
     
-    func listenOnSet(_ proc: @escaping (T!) -> Void) {
+    func listenOnSet(_ proc: @escaping (T?) -> Void) {
         listenersSet.append(proc)
     }
 }
